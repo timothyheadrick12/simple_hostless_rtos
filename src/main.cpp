@@ -1,6 +1,8 @@
 #include <Arduino.h>
 
 #define LED 2
+#define MIO 36//message interrupt output
+#define MII 22//message interrupt input
 #define SPI_CLK_SPEED 10000000
 
 
