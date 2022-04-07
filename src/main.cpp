@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include "kernel.h"
 
 #define LED 2
 #define MIO 36//message interrupt output
@@ -15,6 +16,7 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
   pinMode(LED, OUTPUT);
+  Kernel kernel;
 }
 
 void loop() {

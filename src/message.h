@@ -13,14 +13,20 @@ enum MessageType : byte {
 // it and the microcontroller it is connected to indicates that it is 
 // ready to recieve input
 //This same method can be used to indicate when a message is ready to be sent
+#define MIO 36//message interrupt output
+#define MII 22//message interrupt input
+
 
 class Message {
     private:
-        byte target;
-        MessageType type;
+        byte targetDevice;
+        uint16_t targetProcess;
         byte * message;
     public:
-
+        Message(byte m_targetDevice, uint16_t m_targetProcess, byte * m_message): targetDevice(m_targetDevice), targetProcess(m_targetProcess), message(m_message) {}
+        ~Message();
+        byte* send() const;
+        static byte* receive();
 };
 
 #endif

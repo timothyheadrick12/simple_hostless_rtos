@@ -5,6 +5,10 @@
 
 class PrimeAdder: public Program {
     private:
+        static uint16_t numInstances;
+
+        //if parentId is zero there is no parent instance
+        uint16_t parentId;
         //the total sum of prime numbers between initial curVal and 
         //maxVal inclusive
         unsigned long int sum; 
@@ -16,9 +20,14 @@ class PrimeAdder: public Program {
         unsigned int curTestVal;
     public:
         //pre: 2 <= curVal <= maxVal
-        PrimeAdder(int max, int cur): sum(0), maxVal(max), curVal(cur) {}
+        PrimeAdder(int m_maxVal, int m_curVal, uint16_t m_parentId): Program(numInstances++), parentId(m_parentId), sum(0), maxVal(m_maxVal), curVal(m_curVal), curTestVal(1) {}
+        PrimeAdder(int m_maxVal, int m_curVal): Program(numInstances++), parentId(0), sum(0), maxVal(m_maxVal), curVal(m_curVal), curTestVal(1) {}
         void execute(byte numCycles);
         void execute();
 };
+
+//anything with id 8 or greater is a primeAdder
+//ids 0-7 are reserved for potential kernel processes
+uint16_t PrimeAdder::numInstances = 8;
 
 #endif
