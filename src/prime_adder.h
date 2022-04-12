@@ -11,17 +11,17 @@ class PrimeAdder: public Program {
         uint16_t parentId;
         //the total sum of prime numbers between initial curVal and 
         //maxVal inclusive
-        unsigned long int sum; 
+        uint32_t sum; 
         //the maximum value to be tested if prime
-        unsigned int maxVal; 
+        uint16_t maxVal; 
         //the current value less than equal to maxVal being tested if prime
-        unsigned int curVal;
+        uint16_t curVal;
         //the current value been used to test if curVal is prime
-        unsigned int curTestVal;
+        uint16_t curTestVal;
     public:
         //pre: 2 <= curVal <= maxVal
-        PrimeAdder(int m_maxVal, int m_curVal, uint16_t m_parentId): Program(numInstances++), parentId(m_parentId), sum(0), maxVal(m_maxVal), curVal(m_curVal), curTestVal(1) {}
-        PrimeAdder(int m_maxVal, int m_curVal): Program(numInstances++), parentId(0), sum(0), maxVal(m_maxVal), curVal(m_curVal), curTestVal(1) {}
+        PrimeAdder(uint16_t m_maxVal, uint16_t m_curVal, uint16_t m_parentId): Program(numInstances++), parentId(m_parentId), sum(0), maxVal(m_maxVal), curVal(m_curVal), curTestVal(1) {}
+        PrimeAdder(uint16_t m_maxVal, uint16_t m_curVal): Program(numInstances++), parentId(0), sum(0), maxVal(m_maxVal), curVal(m_curVal), curTestVal(1) {}
         void execute(byte numCycles);
         void execute();
 };
