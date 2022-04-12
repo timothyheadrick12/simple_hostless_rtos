@@ -20,7 +20,7 @@ void IRAM_ATTR message_interrupt_isr();
 class Message {
     private:
         static const uint8_t mclk_channel = 0;
-        static constexpr double mclk_frequency = 10000000;
+        static constexpr double mclk_frequency = 100000;
         static const uint8_t mclk_resolution = 2;
 
         uint8_t targetDevice;
