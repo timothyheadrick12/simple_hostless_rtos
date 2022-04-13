@@ -5,13 +5,13 @@
 
 class PrimeAdder: public Program {
     private:
-        static uint16_t numInstances;
+        static uint8_t nextId;
 
         //if parentId is zero there is no parent instance
-        uint16_t parentId;
+        uint8_t parentId;
         //the total sum of prime numbers between initial curVal and 
         //maxVal inclusive
-        uint32_t sum; 
+        uint16_t sum; 
         //the maximum value to be tested if prime
         uint16_t maxVal; 
         //the current value less than equal to maxVal being tested if prime
@@ -19,15 +19,11 @@ class PrimeAdder: public Program {
         //the current value been used to test if curVal is prime
         uint16_t curTestVal;
     public:
-        //pre: 2 <= curVal <= maxVal
-        PrimeAdder(uint16_t m_maxVal, uint16_t m_curVal, uint16_t m_parentId): Program(numInstances++), parentId(m_parentId), sum(0), maxVal(m_maxVal), curVal(m_curVal), curTestVal(1) {}
-        PrimeAdder(uint16_t m_maxVal, uint16_t m_curVal): Program(numInstances++), parentId(0), sum(0), maxVal(m_maxVal), curVal(m_curVal), curTestVal(1) {}
-        void execute(byte numCycles);
+        //pre: 2 <= curVal <= maxVal < 10,000
+        PrimeAdder(const uint16_t & m_maxVal, const uint16_t & m_curVal, const uint8_t & m_parentId);
+        PrimeAdder(const uint16_t & m_maxVal, const uint16_t & m_curVal, const Kernel & kernel);
+        void execute(const double & numCycles);
         void execute();
 };
-
-//anything with id 8 or greater is a primeAdder
-//ids 0-7 are reserved for potential kernel processes
-uint16_t PrimeAdder::numInstances = 8;
 
 #endif

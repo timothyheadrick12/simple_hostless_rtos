@@ -2,14 +2,15 @@
 
 bool Message::msgBusUsed = false;
 bool Message::msgSent = false;
-uint8_t Message::m_buffer[64];
+uint64_t Message::m_receiveBuffer[BUFFER_SIZE] = {0,0,0,0,0,0,0,0};
 uint8_t Message::m_bufferIndex = 0;
-uint8_t Message::m_bufferFilled = false;
+uint8_t Message::m_nextBufferIndex = 1;
+uint8_t Message::m_bufferFilled = 0;
 uint64_t Message::msgSending = 0;
 
 void IRAM_ATTR message_send_isr() {
-    digitalWrite(MB, Message::msgSending & 0x1 << Message::m_bufferIndex++);
-    if(Message::m_bufferIndex == 60) {
+    digitalWrite(MB, Message::msgSending & (0x1 << (47 - Message::m_bufferIndex++)));
+    if(Message::m_bufferIndex == 48) {
         detachInterrupt(MCLKI);
         Message::stopClk();
         Message::msgSent = true;
@@ -17,7 +18,8 @@ void IRAM_ATTR message_send_isr() {
 }
 
 void IRAM_ATTR message_receive_isr() {
-    Message::m_buffer[Message::m_bufferIndex++] = digitalRead(MB);
+    Message::m_receiveBuffer[Message::m_bufferIndex] |= digitalRead(MB);
+    Message::m_receiveBuffer[Message::m_bufferIndex] << 1;
 }
 
 void IRAM_ATTR message_interrupt_isr() {
@@ -25,8 +27,8 @@ void IRAM_ATTR message_interrupt_isr() {
         Message::msgBusUsed = true;
     else { //if falling
         Message::msgBusUsed = false;
-        Message::m_bufferIndex = 0;
-        Message::m_bufferFilled = true;
+        Message::m_bufferIndex = Message::m_bufferIndex == 7? 0: Message::m_bufferIndex+1;
+        Message::m_bufferFilled++;
     }
 }
 
@@ -39,30 +41,27 @@ void Message::send() const{
 
 void Message::handleMessage() {
     uint8_t i = 0;
-    while(!m_buffer[i])
+    while(!m_receiveBuffer[i])
         i++;
-    if(m_buffer[i+1] || m_buffer[i+2]) {
+    while(!(m_receiveBuffer[i] & 0x1))
+        m_receiveBuffer[i] >>= 1;
+    if((m_receiveBuffer[i] >> 1) & 0x3) {
         Serial.println("Problem receiving a message");
         return;
     }
-    i += 3;
+    m_receiveBuffer[i] >>= 3;
     uint8_t targetDevice = 0;
-    for(uint8_t j = 0; j < 8; j++) {
-        targetDevice |= m_buffer[i+j] << j;
-    }
-    if(targetDevice != Kernel::id)
+    targetDevice |= (m_receiveBuffer[i] & 0xFF);
+    m_receiveBuffer[i] >>= 8;
+    if(targetDevice != Kernel::id && targetDevice != 0xFF)
         return;
-    i += 8;
     uint16_t targetProcess = 0;
-    for(uint8_t j = 0; j < 16; j++) {
-        targetProcess |= m_buffer[i+j] << j;
-    }
-    i += 16;
+    targetProcess |= (m_receiveBuffer[i] & 0xFF);
+    m_receiveBuffer[i] >>= 8;
     uint32_t message = 0;
-    for(uint8_t j = 0; j < 32; j++) {
-        message |= m_buffer[i+j] << j;
-    }
-    Message::m_bufferFilled = false;
+    message |= (m_receiveBuffer[i] & 0xFFFFFFFF);
+    m_receiveBuffer[i] = 0;
+    Message::m_bufferFilled--;
     return;
 }
 

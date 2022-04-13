@@ -2,6 +2,7 @@
 #define PROGRAM_H
 
 #include <Arduino.h>
+#include "kernel.h"
 
 //one funny problem is there is a finite amount of 
 //programs that can be generated in the lifetime
@@ -12,10 +13,11 @@ class Program {
         byte pc;
         boolean complete;
     public:
-        Program(uint16_t m_id): id(m_id), pc(0), complete(false) {}
-        boolean isComplete() {return complete;}
-        virtual void execute(byte numCycles) = 0;
+        Program(const uint8_t & m_id): id(m_id), pc(0), complete(false) {}
+        boolean isComplete() const {return complete;}
+        virtual void execute(const double & numCycles) = 0;
         virtual void handleMessage(byte* message) = 0;
+        uint8_t getId() const {return id;}
 };
 
 #endif

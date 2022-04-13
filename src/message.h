@@ -13,6 +13,7 @@
 #define MB 26//message bus
 #define MCLKO 25//message clock output
 #define MCLKI 33//message clock input
+#define BUFFER_SIZE 8
 
 void IRAM_ATTR message_send_isr();
 void IRAM_ATTR message_receive_isr();
@@ -24,15 +25,15 @@ class Message {
         static const uint8_t mclk_resolution = 2;
 
         uint8_t targetDevice;
-        uint16_t targetProcess;
+        uint8_t targetProcess;
         uint32_t message;
         uint64_t compactedMsg;
 
     public:
-        Message(uint8_t m_targetDevice, uint16_t m_targetProcess, uint32_t m_message): targetDevice(m_targetDevice), targetProcess(m_targetProcess), message(m_message) {
+        Message(uint8_t m_targetDevice, uint8_t m_targetProcess, uint32_t m_message): targetDevice(m_targetDevice), targetProcess(m_targetProcess), message(m_message) {
             compactedMsg = 0;
             compactedMsg |= message;
-            compactedMsg <<= 16;
+            compactedMsg <<= 8;
             compactedMsg |= targetProcess;
             compactedMsg <<= 8;
             compactedMsg |= targetDevice;
@@ -49,8 +50,9 @@ class Message {
         static void handleMessage();
         static bool msgBusUsed;
         static bool msgSent;
-        static uint8_t m_buffer[64];
+        static uint64_t m_receiveBuffer[BUFFER_SIZE];
         static uint8_t m_bufferIndex;
+        static uint8_t Message::m_nextBufferIndex;
         static uint8_t m_bufferFilled;
         static uint64_t msgSending;
 };
