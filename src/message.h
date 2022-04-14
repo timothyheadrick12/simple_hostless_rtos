@@ -26,13 +26,16 @@ class Message {
 
         uint8_t targetDevice;
         uint8_t targetProcess;
+        uint8_t sendingProcess;
         uint32_t message;
         uint64_t compactedMsg;
 
     public:
-        Message(uint8_t m_targetDevice, uint8_t m_targetProcess, uint32_t m_message): targetDevice(m_targetDevice), targetProcess(m_targetProcess), message(m_message) {
+        Message(const uint8_t & m_targetDevice, const uint8_t & m_targetProcess, const uint8_t & m_sendingProcess,const uint32_t & m_message): targetDevice(m_targetDevice), targetProcess(m_targetProcess), sendingProcess(m_sendingProcess), message(m_message) {
             compactedMsg = 0;
             compactedMsg |= message;
+            compactedMsg <<= 8;
+            compactedMsg |= sendingProcess;
             compactedMsg <<= 8;
             compactedMsg |= targetProcess;
             compactedMsg <<= 8;
@@ -52,7 +55,6 @@ class Message {
         static bool msgSent;
         static uint64_t m_receiveBuffer[BUFFER_SIZE];
         static uint8_t m_bufferIndex;
-        static uint8_t Message::m_nextBufferIndex;
         static uint8_t m_bufferFilled;
         static uint64_t msgSending;
 };

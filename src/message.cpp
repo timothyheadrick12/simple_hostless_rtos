@@ -4,22 +4,21 @@ bool Message::msgBusUsed = false;
 bool Message::msgSent = false;
 uint64_t Message::m_receiveBuffer[BUFFER_SIZE] = {0,0,0,0,0,0,0,0};
 uint8_t Message::m_bufferIndex = 0;
-uint8_t Message::m_nextBufferIndex = 1;
 uint8_t Message::m_bufferFilled = 0;
 uint64_t Message::msgSending = 0;
 
 void IRAM_ATTR message_send_isr() {
-    digitalWrite(MB, Message::msgSending & (0x1 << (47 - Message::m_bufferIndex++)));
-    if(Message::m_bufferIndex == 48) {
-        detachInterrupt(MCLKI);
+    digitalWrite(MB, Message::msgSending & (0x1 << (58 - Message::m_bufferIndex++)));
+    if(Message::m_bufferIndex == 59) {
         Message::stopClk();
+        detachInterrupt(MCLKI);
         Message::msgSent = true;
     }
 }
 
 void IRAM_ATTR message_receive_isr() {
     Message::m_receiveBuffer[Message::m_bufferIndex] |= digitalRead(MB);
-    Message::m_receiveBuffer[Message::m_bufferIndex] << 1;
+    Message::m_receiveBuffer[Message::m_bufferIndex] <<= 1;
 }
 
 void IRAM_ATTR message_interrupt_isr() {
@@ -40,13 +39,16 @@ void Message::send() const{
 }
 
 void Message::handleMessage() {
+    if(Message::m_bufferFilled == 8){
+        Serial.println("WARNING: The message buffer is full!");
+    }
     uint8_t i = 0;
     while(!m_receiveBuffer[i])
         i++;
     while(!(m_receiveBuffer[i] & 0x1))
         m_receiveBuffer[i] >>= 1;
     if((m_receiveBuffer[i] >> 1) & 0x3) {
-        Serial.println("Problem receiving a message");
+        Serial.println("ERROR: Problem receiving a message");
         return;
     }
     m_receiveBuffer[i] >>= 3;
@@ -55,8 +57,11 @@ void Message::handleMessage() {
     m_receiveBuffer[i] >>= 8;
     if(targetDevice != Kernel::id && targetDevice != 0xFF)
         return;
-    uint16_t targetProcess = 0;
+    uint8_t targetProcess = 0;
     targetProcess |= (m_receiveBuffer[i] & 0xFF);
+    m_receiveBuffer[i] >>= 8;
+    uint8_t sendingProcess = 0;
+    sendingProcess |= (m_receiveBuffer[i] & 0xFF);
     m_receiveBuffer[i] >>= 8;
     uint32_t message = 0;
     message |= (m_receiveBuffer[i] & 0xFFFFFFFF);
