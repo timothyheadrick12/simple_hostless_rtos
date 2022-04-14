@@ -8,6 +8,7 @@
 
 byte deviceNum; 
 byte numDevices = 1;
+Kernel kernel;
 Scheduler scheduler;
 Program* curProgram = nullptr;
 uint8_t i = 0;
@@ -39,7 +40,7 @@ void loop() {
     Message::resolveSend();
   }
   if(Message::m_bufferFilled) {
-    Message::handleMessage();
+    kernel.handleMessage();
   }
 
 }

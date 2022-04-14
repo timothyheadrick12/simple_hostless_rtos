@@ -8,13 +8,13 @@ Scheduler::Scheduler(){
     }
 }
 
-Scheduler::~Scheduler(){
-    for(uint8_t i = 0; i < 7; i++) {
-        for(uint8_t j = 0; j < 20; j++) {
-            delete scheduler[i][j];
-        }
-    }
-}
+// Scheduler::~Scheduler(){
+//     for(uint8_t i = 0; i < 7; i++) {
+//         for(uint8_t j = 0; j < 20; j++) {
+//             delete scheduler[i][j];
+//         }
+//     }
+// }
 
 void Scheduler::push(Program* program){
     for(uint8_t j = 0; j < 20; j++) {
@@ -39,10 +39,19 @@ void Scheduler::push(Program* program, const uint8_t & level){
 }
 
 Program* Scheduler::getNext(const uint8_t & level) {
-    Program* found = scheduler[level][0];
+    Program* found = nullptr;
+    uint8_t firstReadyIndex = 0;
+    do {
+        found = scheduler[level][firstReadyIndex];
+        firstReadyIndex++;
+    } while(firstReadyIndex < levelLen && found && !found->isReady());
+    if(firstReadyIndex == levelLen && !found->isReady()) {
+        Serial.println("ERROR: Scheduler level is filled with waiting processes");
+        return nullptr;
+    }
     if(!found)
         return nullptr;
-    for(uint8_t i = 1; i < 20; i++){
+    for(uint8_t i = firstReadyIndex + 1; i < 20; i++){
         scheduler[level][i-1] = scheduler[level][i];
     }
     scheduler[level][19] = nullptr;

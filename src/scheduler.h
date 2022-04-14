@@ -11,7 +11,7 @@ class Scheduler {
         Program *scheduler[schedulerLevels][levelLen];
     public:
         Scheduler();
-        ~Scheduler();
+        // ~Scheduler();
         void push(Program* program);
         void push(Program* program, const uint8_t & level);
         Program* getNext(const uint8_t & level);

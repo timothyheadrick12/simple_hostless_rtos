@@ -4,6 +4,8 @@
 #include<Arduino.h>
 #include "kernel.h"
 
+//Need to fix construct Message function to use pointers
+
 //can dedicate two gpio ports to indicate when all devices are ready to
 //recieve input. Each microcontroller will output a low signal when both
 // it and the microcontroller it is connected to indicates that it is 
@@ -24,24 +26,24 @@ class Message {
         static constexpr double mclk_frequency = 100000;
         static const uint8_t mclk_resolution = 2;
 
-        uint8_t targetDevice;
+        uint8_t targetSendingDevice;
         uint8_t targetProcess;
         uint8_t sendingProcess;
         uint32_t message;
         uint64_t compactedMsg;
 
+        void compact();
+
     public:
-        Message(const uint8_t & m_targetDevice, const uint8_t & m_targetProcess, const uint8_t & m_sendingProcess,const uint32_t & m_message): targetDevice(m_targetDevice), targetProcess(m_targetProcess), sendingProcess(m_sendingProcess), message(m_message) {
-            compactedMsg = 0;
-            compactedMsg |= message;
-            compactedMsg <<= 8;
-            compactedMsg |= sendingProcess;
-            compactedMsg <<= 8;
-            compactedMsg |= targetProcess;
-            compactedMsg <<= 8;
-            compactedMsg |= targetDevice;
-            compactedMsg <<= 3;
-            compactedMsg |= 0b001;
+        Message(const uint8_t & m_targetDevice, const uint8_t & m_targetProcess, const uint8_t & m_sendingProcess,const uint32_t & m_message): targetProcess(m_targetProcess), sendingProcess(m_sendingProcess), message(m_message), compactedMsg(0) {
+            targetSendingDevice = 0 | Kernel::id;
+            targetSendingDevice <<= 4;
+            targetSendingDevice |= m_targetDevice;
+        }
+        Message(const uint8_t & m_targetDevice, const uint8_t & m_sendingDevice, const uint8_t & m_targetProcess, const uint8_t & m_sendingProcess,const uint32_t & m_message): targetProcess(m_targetProcess), sendingProcess(m_sendingProcess), message(m_message), compactedMsg(0) {
+            targetSendingDevice = 0 | m_sendingDevice;
+            targetSendingDevice <<= 4;
+            targetSendingDevice |= m_targetDevice;
         }
         ~Message();
         static void init();
@@ -49,8 +51,8 @@ class Message {
         static void stopClk();
         static void sendMode();
         static void resolveSend();
-        void send() const;
-        static void handleMessage();
+        void send();
+        static void constructMessage(Message* messagePtr);
         static bool msgBusUsed;
         static bool msgSent;
         static uint64_t m_receiveBuffer[BUFFER_SIZE];

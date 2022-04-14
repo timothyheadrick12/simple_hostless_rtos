@@ -2,7 +2,6 @@
 #define KERNEL_H
 
 #include <Arduino.h>
-#include "message.h"
 
 #define CREATE_CHILD_PRIME_ADDER 6
 
@@ -10,9 +9,10 @@ class Kernel {
     private:
         uint8_t connectedDevices;
     public:
-        Kernel();
+        Kernel() {}
         uint8_t getConnectedDevices() const {return connectedDevices;}
-        static uint8_t id;
+        void handleMessage();
+        static uint8_t id; //can only actually be 4 bits, not eight
 
 };
 

@@ -31,14 +31,17 @@ void IRAM_ATTR message_interrupt_isr() {
     }
 }
 
-void Message::send() const{
+void Message::send(){
+    if(!compactedMsg) {
+        compact();
+    }
     while(msgBusUsed);
     Message::sendMode();
     msgSending = compactedMsg;
     Message::startClk();
 }
 
-void Message::handleMessage() {
+void Message::constructMessage(Message * messagePtr) {
     if(Message::m_bufferFilled == 8){
         Serial.println("WARNING: The message buffer is full!");
     }
@@ -53,8 +56,11 @@ void Message::handleMessage() {
     }
     m_receiveBuffer[i] >>= 3;
     uint8_t targetDevice = 0;
-    targetDevice |= (m_receiveBuffer[i] & 0xFF);
-    m_receiveBuffer[i] >>= 8;
+    targetDevice |= (m_receiveBuffer[i] & 0xF);
+    m_receiveBuffer[i] >>= 4;
+    uint8_t sendingDevice = 0;
+    sendingDevice |= (m_receiveBuffer[i] & 0xF);
+    m_receiveBuffer[i] >>= 4;
     if(targetDevice != Kernel::id && targetDevice != 0xFF)
         return;
     uint8_t targetProcess = 0;
@@ -67,7 +73,7 @@ void Message::handleMessage() {
     message |= (m_receiveBuffer[i] & 0xFFFFFFFF);
     m_receiveBuffer[i] = 0;
     Message::m_bufferFilled--;
-    return;
+    messagePtr = new Message(targetDevice, sendingDevice, targetProcess, sendingProcess, message);
 }
 
 void Message::init() {
@@ -106,4 +112,17 @@ void Message::resolveSend() {
     msgSent = false;
     msgSending = 0;
     m_bufferIndex = 0;
+}
+
+void Message::compact(){
+    compactedMsg = 0;
+    compactedMsg |= message;
+    compactedMsg <<= 8;
+    compactedMsg |= sendingProcess;
+    compactedMsg <<= 8;
+    compactedMsg |= targetProcess;
+    compactedMsg <<= 8;
+    compactedMsg |= targetSendingDevice;
+    compactedMsg <<= 3;
+    compactedMsg |= 0b001;
 }
