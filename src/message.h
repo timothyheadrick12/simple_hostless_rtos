@@ -2,7 +2,6 @@
 #define MESSAGE_H
 
 #include<Arduino.h>
-#include "kernel.h"
 
 //Need to fix construct Message function to use pointers
 
@@ -35,17 +34,8 @@ class Message {
         void compact();
 
     public:
-        Message(const uint8_t & m_targetDevice, const uint8_t & m_targetProcess, const uint8_t & m_sendingProcess,const uint32_t & m_message): targetProcess(m_targetProcess), sendingProcess(m_sendingProcess), message(m_message), compactedMsg(0) {
-            targetSendingDevice = 0 | Kernel::id;
-            targetSendingDevice <<= 4;
-            targetSendingDevice |= m_targetDevice;
-        }
-        Message(const uint8_t & m_targetDevice, const uint8_t & m_sendingDevice, const uint8_t & m_targetProcess, const uint8_t & m_sendingProcess,const uint32_t & m_message): targetProcess(m_targetProcess), sendingProcess(m_sendingProcess), message(m_message), compactedMsg(0) {
-            targetSendingDevice = 0 | m_sendingDevice;
-            targetSendingDevice <<= 4;
-            targetSendingDevice |= m_targetDevice;
-        }
-        ~Message();
+        Message(const uint8_t & m_targetDevice, const uint8_t & m_targetProcess, const uint8_t & m_sendingProcess,const uint32_t & m_message);
+        Message(const uint8_t & m_targetDevice, const uint8_t & m_sendingDevice, const uint8_t & m_targetProcess, const uint8_t & m_sendingProcess,const uint32_t & m_message);
         static void init();
         static void startClk();
         static void stopClk();
@@ -59,6 +49,12 @@ class Message {
         static uint8_t m_bufferIndex;
         static uint8_t m_bufferFilled;
         static uint64_t msgSending;
+        uint8_t getTargetProcess() const {return targetProcess;}
+        uint8_t getSendingProcess() const {return sendingProcess;}
+        uint8_t getMessage() const {return message;}
+        uint8_t getSendingDevice() const {return targetSendingDevice >> 4;}
+        uint8_t getTargetDevice() const {return targetSendingDevice & 0xF;}
+
 };
 
 #endif

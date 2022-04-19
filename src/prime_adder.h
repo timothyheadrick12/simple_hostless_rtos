@@ -1,7 +1,8 @@
 #ifndef PRIME_ADDER_H
 #define PRIME_ADDER_H
 
-#include <program.h>
+#include "program.h"
+#include "kernel.h"
 
 class PrimeAdder: public Program {
     private:

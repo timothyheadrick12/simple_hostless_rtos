@@ -1,4 +1,5 @@
 #include "message.h"
+#include "kernel.h"
 
 bool Message::msgBusUsed = false;
 bool Message::msgSent = false;
@@ -31,6 +32,18 @@ void IRAM_ATTR message_interrupt_isr() {
     }
 }
 
+Message::Message(const uint8_t & m_targetDevice, const uint8_t & m_targetProcess, const uint8_t & m_sendingProcess,const uint32_t & m_message): targetProcess(m_targetProcess), sendingProcess(m_sendingProcess), message(m_message), compactedMsg(0) {
+    targetSendingDevice = 0 | Kernel::id;
+    targetSendingDevice <<= 4;
+    targetSendingDevice |= m_targetDevice;
+}
+
+Message::Message(const uint8_t & m_targetDevice, const uint8_t & m_sendingDevice, const uint8_t & m_targetProcess, const uint8_t & m_sendingProcess,const uint32_t & m_message): targetProcess(m_targetProcess), sendingProcess(m_sendingProcess), message(m_message), compactedMsg(0) {
+            targetSendingDevice = 0 | m_sendingDevice;
+            targetSendingDevice <<= 4;
+            targetSendingDevice |= m_targetDevice;
+        }
+
 void Message::send(){
     if(!compactedMsg) {
         compact();
@@ -52,17 +65,20 @@ void Message::constructMessage(Message * messagePtr) {
         m_receiveBuffer[i] >>= 1;
     if((m_receiveBuffer[i] >> 1) & 0x3) {
         Serial.println("ERROR: Problem receiving a message");
+        messagePtr = nullptr;
         return;
     }
     m_receiveBuffer[i] >>= 3;
     uint8_t targetDevice = 0;
     targetDevice |= (m_receiveBuffer[i] & 0xF);
     m_receiveBuffer[i] >>= 4;
+    if(targetDevice != Kernel::id && targetDevice != 0xF){
+        messagePtr = nullptr;
+        return;
+    }
     uint8_t sendingDevice = 0;
     sendingDevice |= (m_receiveBuffer[i] & 0xF);
     m_receiveBuffer[i] >>= 4;
-    if(targetDevice != Kernel::id && targetDevice != 0xFF)
-        return;
     uint8_t targetProcess = 0;
     targetProcess |= (m_receiveBuffer[i] & 0xFF);
     m_receiveBuffer[i] >>= 8;

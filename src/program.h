@@ -2,7 +2,6 @@
 #define PROGRAM_H
 
 #include <Arduino.h>
-#include "kernel.h"
 #include "message.h"
 
 //one funny problem is there is a finite amount of 
@@ -23,6 +22,7 @@ class Program {
         boolean isReady() const {return status == READY;}
         virtual void execute(const double & numCycles) = 0;
         uint8_t getId() const {return id;}
+        virtual void handleResponse(const uint32_t & response) = 0;
 };
 
 #endif

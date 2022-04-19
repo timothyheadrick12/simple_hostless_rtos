@@ -1,5 +1,4 @@
 #include "prime_adder.h"
-
 //anything with id 8 or greater is a primeAdder
 //ids 0-7 are reserved for potential kernel processes
 uint8_t PrimeAdder::nextId = 8;
