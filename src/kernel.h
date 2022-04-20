@@ -10,7 +10,7 @@
 
 #define OFF 0
 #define ON 1
-#define DEVICE_ID 0
+#define DEVICE_ID 1
 
 #define CONNECTED_DEVICE_I 13
 #define CONNECTED_DEVICE_O 16

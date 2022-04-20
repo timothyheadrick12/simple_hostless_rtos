@@ -5,12 +5,13 @@ bool Message::msgBusUsed = false;
 bool Message::msgSent = false;
 uint64_t Message::m_receiveBuffer[BUFFER_SIZE] = {0,0,0,0,0,0,0,0};
 uint8_t Message::m_bufferIndex = 0;
+uint8_t Message::m_bufferSendIndex = 0;
 uint8_t Message::m_bufferFilled = 0;
 uint64_t Message::msgSending = 0;
 
 void IRAM_ATTR message_send_isr() {
-    digitalWrite(MB, Message::msgSending & (0x1 << (58 - Message::m_bufferIndex++)));
-    if(Message::m_bufferIndex == 59) {
+    digitalWrite(MB, Message::msgSending & (0x1 << (58 - Message::m_bufferSendIndex++)));
+    if(Message::m_bufferSendIndex == 59) {
         Message::stopClk();
         detachInterrupt(MCLKI);
         Message::msgSent = true;
@@ -20,6 +21,7 @@ void IRAM_ATTR message_send_isr() {
 void IRAM_ATTR message_receive_isr() {
     Message::m_receiveBuffer[Message::m_bufferIndex] |= digitalRead(MB);
     Message::m_receiveBuffer[Message::m_bufferIndex] <<= 1;
+    Serial.println(digitalRead(MB));
 }
 
 void IRAM_ATTR message_interrupt_isr() {
@@ -65,6 +67,9 @@ void Message::constructMessage(Message * messagePtr) {
         m_receiveBuffer[i] >>= 1;
     if((m_receiveBuffer[i] >> 1) & 0x3) {
         Serial.println("ERROR: Problem receiving a message");
+        Serial.println(m_receiveBuffer[i]);
+        Message::m_bufferFilled--;
+        m_receiveBuffer[i] = 0;
         messagePtr = nullptr;
         return;
     }
@@ -127,7 +132,7 @@ void Message::resolveSend() {
     attachInterrupt(MCLKI, message_receive_isr, FALLING);
     msgSent = false;
     msgSending = 0;
-    m_bufferIndex = 0;
+    m_bufferSendIndex = 0;
 }
 
 void Message::compact(){

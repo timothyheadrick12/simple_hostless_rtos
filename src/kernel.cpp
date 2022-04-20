@@ -28,6 +28,7 @@ void Kernel::handleMessage() {
         switch(message->getTargetProcess()) {
             case NEW_DEVICE_CONNECTED:
                 connectedDevices++;
+                Serial.println("Successfully recieved device connected message!");
                 break;
             case TOGGLE_LED:
                 if(ledStatus) {

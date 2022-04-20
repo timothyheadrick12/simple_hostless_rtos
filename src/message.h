@@ -22,7 +22,7 @@ void IRAM_ATTR message_interrupt_isr();
 class Message {
     private:
         static const uint8_t mclk_channel = 0;
-        static constexpr double mclk_frequency = 100000;
+        static constexpr double mclk_frequency = 1;
         static const uint8_t mclk_resolution = 2;
 
         uint8_t targetSendingDevice;
@@ -47,6 +47,7 @@ class Message {
         static bool msgSent;
         static uint64_t m_receiveBuffer[BUFFER_SIZE];
         static uint8_t m_bufferIndex;
+        static uint8_t m_bufferSendIndex;
         static uint8_t m_bufferFilled;
         static uint64_t msgSending;
         uint8_t getTargetProcess() const {return targetProcess;}
