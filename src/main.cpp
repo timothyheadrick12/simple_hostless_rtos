@@ -30,8 +30,6 @@ void IRAM_ATTR button3_pressed_isr() {
 void setup() {
   Serial.begin(115200);
   Serial.println(WiFi.macAddress());
-  while(Serial2.available() > 0)
-    char t = Serial2.read();
   pinMode(BUTTON_1, INPUT);
   attachInterrupt(BUTTON_1, button1_pressed_isr, FALLING);
   pinMode(BUTTON_2, INPUT);
