@@ -10,10 +10,10 @@
 
 #define OFF 0
 #define ON 1
-#define DEVICE_ID 1
+#define DEVICE_ID 0
 
 #define CONNECTED_DEVICE_I 13
-#define CONNECTED_DEVICE_O 16
+#define CONNECTED_DEVICE_O 19
 #define LED 2
 
 void IRAM_ATTR device_disconnected_isr();

@@ -24,6 +24,7 @@ Kernel::Kernel() {
 void Kernel::handleMessage() {
     Message * message = nullptr;
     Message::constructMessage(message);
+    Serial.println(message->getTargetProcess());
     if(message != nullptr) {
         switch(message->getTargetProcess()) {
             case NEW_DEVICE_CONNECTED:

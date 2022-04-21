@@ -1,5 +1,9 @@
 #include <Arduino.h>
 #include "kernel.h"
+#include <WiFi.h>
+
+//Device 0 mac address: C8:C9:A3:C5:C8:38
+//Device 1 mac address: C8:C9:A3:C5:DE:94
 
 #define BUTTON_1 0
 #define BUTTON_2 5
@@ -15,15 +19,19 @@ void IRAM_ATTR button1_pressed_isr() {
 
 void IRAM_ATTR button2_pressed_isr() {
     Serial.println("Button 2 pressed!");
+    Message(1, TOGGLE_LED, 0, 0);
 }
 
 void IRAM_ATTR button3_pressed_isr() {
     Serial.println("Button 3 pressed!");
+    Message(0, TOGGLE_LED, 0, 0);
 }
 
 void setup() {
-  // put your setup code here, to run once:
   Serial.begin(115200);
+  Serial.println(WiFi.macAddress());
+  while(Serial2.available() > 0)
+    char t = Serial2.read();
   pinMode(BUTTON_1, INPUT);
   attachInterrupt(BUTTON_1, button1_pressed_isr, FALLING);
   pinMode(BUTTON_2, INPUT);
@@ -35,7 +43,6 @@ void setup() {
 }
 
 void loop() {
-//   put your main code here, to run repeatedly:
   i = 0;
   do {
     curProgram = kernel.scheduler.getNext(i++);
@@ -46,11 +53,8 @@ void loop() {
         kernel.scheduler.push(curProgram, i == schedulerLevels? i - 1 : i);
     }
   }
-    
-  if(Message::msgSent) {
-    Message::resolveSend();
-  }
-  if(Message::m_bufferFilled) {
+  if(Serial2.available() > 6) {
+    Serial.println("Buffer Filled!");
     kernel.handleMessage();
   }
 
