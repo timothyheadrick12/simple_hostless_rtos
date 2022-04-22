@@ -12,10 +12,11 @@ class Scheduler {
     public:
         Scheduler();
         // ~Scheduler();
-        void push(Program* program);
+        void push(Program * program);
         void push(Program* program, const uint8_t & level);
+        void remove(Program * program);
         Program* getNext(const uint8_t & level);
-        Program* find(const uint16_t & id) const;
+        Program* find(const uint8_t & id) const;
 
 };
 

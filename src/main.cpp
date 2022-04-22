@@ -1,6 +1,8 @@
 #include <Arduino.h>
+#include <Wifi.h>
 #include "kernel.h"
-#include <WiFi.h>
+#include "prime_adder.h"
+
 
 //Device 0 mac address: C8:C9:A3:C5:C8:38
 //Device 1 mac address: C8:C9:A3:C5:DE:94
@@ -11,49 +13,67 @@
 
 Kernel kernel;
 Program* curProgram = nullptr;
-uint8_t i = 0;
+volatile boolean schedulePrimeAdder = false;
+volatile unsigned long lastDebounceTime = 0;
+const unsigned long debounceDelay = 200;
 
 void IRAM_ATTR button1_pressed_isr() {
-    Serial.println("Button 1 pressed!");
+    if(millis() - lastDebounceTime > debounceDelay) {
+        Serial.println("Button 1 pressed!");
+        schedulePrimeAdder = true;
+    }
+    lastDebounceTime = millis();  
 }
 
 void IRAM_ATTR button2_pressed_isr() {
-    Serial.println("Button 2 pressed!");
-    Message(1, TOGGLE_LED, 0, 0);
+    if(millis() - lastDebounceTime > debounceDelay) {
+        Serial.println("Button 2 pressed!");
+        kernel.toggleLed();
+    }
+    lastDebounceTime = millis();  
 }
 
 void IRAM_ATTR button3_pressed_isr() {
-    Serial.println("Button 3 pressed!");
-    Message(0, TOGGLE_LED, 0, 0);
+    if(millis() - lastDebounceTime > debounceDelay) {
+        Serial.println("Button 3 pressed!");
+        Message(TOGGLE_LED, 0, 0).send();
+    }
+    lastDebounceTime = millis();  
 }
 
 void setup() {
-  Serial.begin(115200);
-  Serial.println(WiFi.macAddress());
-  pinMode(BUTTON_1, INPUT);
-  attachInterrupt(BUTTON_1, button1_pressed_isr, FALLING);
-  pinMode(BUTTON_2, INPUT);
-  attachInterrupt(BUTTON_2, button2_pressed_isr, RISING);
-  pinMode(BUTTON_3, INPUT);
-  attachInterrupt(BUTTON_3, button3_pressed_isr, RISING);
-
+    Serial.begin(115200);
+    pinMode(BUTTON_1, INPUT);
+    attachInterrupt(BUTTON_1, button1_pressed_isr, FALLING);
+    pinMode(BUTTON_2, INPUT);
+    attachInterrupt(BUTTON_2, button2_pressed_isr, RISING);
+    pinMode(BUTTON_3, INPUT);
+    attachInterrupt(BUTTON_3, button3_pressed_isr, RISING);
+    Message::init();
 
 }
 
 void loop() {
-  i = 0;
-  do {
-    curProgram = kernel.scheduler.getNext(i++);
-  } while(i < schedulerLevels && !curProgram);
-  if(curProgram) {
-        curProgram->execute(pow(2, i-1));
-    if(!curProgram->isComplete()) {
-        kernel.scheduler.push(curProgram, i == schedulerLevels? i - 1 : i);
+    if(schedulePrimeAdder) {
+        kernel.scheduler.push(new PrimeAdder(10000, 1));
+        Serial.println("Scheduled Prime Adder!");
+        schedulePrimeAdder = false;
     }
-  }
-  if(Serial2.available() > 6) {
-    Serial.println("Buffer Filled!");
+    uint8_t i = 0;
+    do {
+        curProgram = kernel.scheduler.getNext(i++);
+    } while(i < schedulerLevels && !curProgram);
+    if(curProgram) {
+        curProgram->execute(pow(2, i-1));
+        if(!(curProgram->isComplete())) {
+            kernel.scheduler.push(curProgram, i == schedulerLevels? i - 1: i);
+        } else {
+            kernel.scheduler.remove(curProgram);
+            Serial.print("Process ");
+            Serial.print(curProgram->getId());
+            Serial.println(" completed!");
+        }
+    }
     kernel.handleMessage();
-  }
 
 }

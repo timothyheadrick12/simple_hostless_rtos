@@ -25,7 +25,7 @@ class PrimeAdder: public Program {
     public:
         //pre: 2 <= curVal <= maxVal < 10,000
         PrimeAdder(const uint16_t & m_maxVal, const uint16_t & m_curVal, const uint8_t & m_parentDeviceId,const uint8_t & m_parentProcessId);
-        PrimeAdder(const uint16_t & m_maxVal, const uint16_t & m_curVal, const Kernel & kernel);
+        PrimeAdder(const uint16_t & m_maxVal, const uint16_t & m_curVal);
         void execute(const double & numCycles);
         void execute();
         void handleResponse(const uint32_t & response);

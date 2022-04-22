@@ -2,39 +2,32 @@
 #define MESSAGE_H
 
 #include<Arduino.h>
+#include <esp_now.h>
+#include <WiFi.h>
 
-//Need to fix construct Message function to use pointers
 
-//can dedicate two gpio ports to indicate when all devices are ready to
-//recieve input. Each microcontroller will output a low signal when both
-// it and the microcontroller it is connected to indicates that it is 
-// ready to recieve input
-//This same method can be used to indicate when a message is ready to be sent
-#define MI 27//message interrupt
-#define RXD2 16//RX input
-#define TXD2 17//TX output
 
-void IRAM_ATTR message_interrupt_isr();
-class Message {
-    private:
-        uint8_t targetSendingDevice;
-        uint8_t targetProcess;
-        uint8_t sendingProcess;
-        uint32_t message;
-
-    public:
-        Message(const uint8_t & m_targetDevice, const uint8_t & m_targetProcess, const uint8_t & m_sendingProcess,const uint32_t & m_message);
-        Message(const uint8_t & m_targetDevice, const uint8_t & m_sendingDevice, const uint8_t & m_targetProcess, const uint8_t & m_sendingProcess,const uint32_t & m_message);
-        static void init();
-        void send();
-        static void constructMessage(Message* messagePtr);
-        static bool msgBusUsed;
-        uint8_t getTargetProcess() const {return targetProcess;}
-        uint8_t getSendingProcess() const {return sendingProcess;}
-        uint8_t getMessage() const {return message;}
-        uint8_t getSendingDevice() const {return targetSendingDevice >> 4;}
-        uint8_t getTargetDevice() const {return targetSendingDevice & 0xF;}
-
+struct Message {
+    static const uint8_t broadcastAddress[6];
+    static esp_now_peer_info_t peerInfo;
+    static Message incomingMessage;
+    static bool messageReceived;
+    uint8_t targetProcess;
+    uint8_t sendingProcess;
+    uint32_t message;
+    Message() {};
+    Message(const uint8_t & m_targetProcess, const uint8_t & m_sendingProcess, const uint32_t & m_message): targetProcess(m_targetProcess), sendingProcess(m_sendingProcess), message(m_message) {}
+    Message(const Message & message): targetProcess(message.targetProcess), sendingProcess(message.sendingProcess), message(message.message) {}
+    static void init();
+    void send();
 };
+
+
+
+// Callback when data is sent
+void IRAM_ATTR OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status);
+
+// Callback when data is received
+void IRAM_ATTR OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len);
 
 #endif

@@ -7,10 +7,12 @@ PrimeAdder::PrimeAdder(const uint16_t & m_maxVal, const uint16_t & m_curVal, con
 
 }
 
-PrimeAdder::PrimeAdder(const uint16_t & m_maxVal, const uint16_t & m_curVal, const Kernel & kernel): Program(nextId++), parentProcessId(0), numResponses(0), sum(0) {
+PrimeAdder::PrimeAdder(const uint16_t & m_maxVal, const uint16_t & m_curVal): Program(nextId++), parentProcessId(0), numResponses(0), sum(2) {
     maxVal = m_maxVal;
     curTestVal = 1;
-    uint8_t numConnectedDevices = kernel.getConnectedDevices();
+    uint8_t numConnectedDevices = Kernel::connectedDevices;
+    Serial.print("Number of connected devices: ");
+    Serial.println(numConnectedDevices);
     if(numConnectedDevices == 0) {
         curVal = m_curVal;
         Serial.println("Created primeAdder on one device");
@@ -20,15 +22,16 @@ PrimeAdder::PrimeAdder(const uint16_t & m_maxVal, const uint16_t & m_curVal, con
         numChildProcesses = 1;
         uint16_t curMaxVal;
         for(uint8_t i = 0; i < numConnectedDevices; i++) {
-            if(i != Kernel::id) {
-                curMaxVal = maxVal - (maxVal/(numConnectedDevices + 1)) * (numChildProcesses);
-                message |= curMaxVal;
-                message <<= 16;
-                message |= curMaxVal - (m_maxVal - m_curVal)/(numConnectedDevices + 1);
-                messageContainer = new Message(i, CREATE_CHILD_PRIME_ADDER, id, message);
-                messageContainer->send();
-                numChildProcesses++;
+            curMaxVal = maxVal - (maxVal/(numConnectedDevices + 1)) * (numChildProcesses);
+            if(i == 0) {
+                curVal = maxVal - curMaxVal;
             }
+            message |= curMaxVal;
+            message <<= 16;
+            message |= curMaxVal - (m_maxVal - m_curVal)/(numConnectedDevices + 1);
+            messageContainer = new Message(CREATE_CHILD_PRIME_ADDER, id, message);
+            messageContainer->send();
+            numChildProcesses++;
         }
         numChildProcesses--;
         Serial.println("Created primeAdder on multiple devices");
@@ -40,6 +43,7 @@ void PrimeAdder::execute(const double & numCycles) {
     byte i = 0;
     while(i < numCycles && !complete) {
         execute();
+        i++;
     }
 }
 
@@ -50,8 +54,10 @@ void PrimeAdder::execute() {
         }
         else{
             complete = true;
+            Serial.print("Finished prime addition: ");
+            Serial.println(sum);
             if(parentProcessId) {
-                Message(parentDeviceId, parentProcessId, id, sum).send();
+                Message(parentProcessId, id, sum).send();
             }
         }
     }

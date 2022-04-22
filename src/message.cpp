@@ -1,65 +1,52 @@
 #include "message.h"
 #include "kernel.h"
+//-----------------------------------------------------Device 1---------------------------------Device 0
+const uint8_t Message::broadcastAddress[6] = /*{0xC8, 0xC9, 0xA3, 0xC5, 0xC8, 0x38};*/ {0xC8, 0xC9, 0xA3, 0xC5, 0xDE, 0x94};
+esp_now_peer_info_t Message::peerInfo;
+Message Message::incomingMessage;
+bool Message::messageReceived = false;
 
-bool Message::msgBusUsed = false;
-
-void IRAM_ATTR message_interrupt_isr() {
-    if(digitalRead(MI)) //if rising
-        Message::msgBusUsed = true;
-    else { //if falling
-        Message::msgBusUsed = false;
-    }
+void IRAM_ATTR OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
+  Serial.print("\r\nLast Packet Send Status:\t");
+  Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
 }
 
-Message::Message(const uint8_t & m_targetDevice, const uint8_t & m_targetProcess, const uint8_t & m_sendingProcess,const uint32_t & m_message): targetProcess(m_targetProcess), sendingProcess(m_sendingProcess), message(m_message) {
-    targetSendingDevice = 0 | Kernel::id;
-    targetSendingDevice <<= 4;
-    targetSendingDevice |= m_targetDevice;
+void IRAM_ATTR OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
+  memcpy(&Message::incomingMessage, incomingData, sizeof(Message::incomingMessage));
+  Serial.print("Bytes received: ");
+  Serial.println(len);
+  Message::messageReceived = true;
 }
 
-Message::Message(const uint8_t & m_targetDevice, const uint8_t & m_sendingDevice, const uint8_t & m_targetProcess, const uint8_t & m_sendingProcess,const uint32_t & m_message): targetProcess(m_targetProcess), sendingProcess(m_sendingProcess), message(m_message) {
-            targetSendingDevice = 0 | m_sendingDevice;
-            targetSendingDevice <<= 4;
-            targetSendingDevice |= m_targetDevice;
-        }
-
-void Message::send(){
-    while(msgBusUsed);
-    pinMode(MI, OUTPUT);
-    digitalWrite(MI, HIGH);
-    uint8_t messageBytes[7] = {targetSendingDevice, targetProcess, sendingProcess, message >> 48 & 0xFF, message >> 32 & 0xFF, message >> 16 * 0xFF, message & 0xFF};
-    Serial2.write(messageBytes, 7);
-    digitalWrite(MI, LOW);
-    pinMode(MI, INPUT);
-}
-
-void Message::constructMessage(Message * messagePtr) {
-    Serial.println("Constructing message!");
-    uint8_t messageBytes[7];
-    Serial2.readBytes(messageBytes, 7);
-    uint8_t targetDevice = (messageBytes[0] & 0xF);
-    messageBytes[0] >>= 4;
-    if(targetDevice != Kernel::id && targetDevice != 0xF){
-        messagePtr = nullptr;
-        Serial.println("Problem with message!");
-        return;
-    }
-    uint8_t sendingDevice = (messageBytes[0] & 0xF);
-    uint8_t targetProcess = messageBytes[1];
-    uint8_t sendingProcess = messageBytes[2];
-    uint32_t message = 0;
-    message |= messageBytes[3];
-    message <<= 8;
-    message |= messageBytes[4];
-    message <<= 8;
-    message |= messageBytes[5];
-    message <<= 8;
-    message |= messageBytes[6];
-    messagePtr = new Message(targetDevice, sendingDevice, targetProcess, sendingProcess, message);
+void Message::send() {
+    esp_now_send(broadcastAddress, (uint8_t *) &(*this), sizeof(*this));
 }
 
 void Message::init() {
-    pinMode(MI, INPUT);
-    attachInterrupt(MI, message_interrupt_isr, CHANGE);
-    Serial2.begin(115200, SERIAL_8N1, RXD2, TXD2);
+    // Set device as a Wi-Fi Station
+    WiFi.mode(WIFI_STA);
+
+    // Init ESP-NOW
+    if (esp_now_init() != ESP_OK) {
+        Serial.println("Error initializing ESP-NOW");
+        return;
+    }
+
+    // Once ESPNow is successfully Init, we will register for Send CB to
+    // get the status of Trasnmitted packet
+    esp_now_register_send_cb(OnDataSent);
+
+    // Register peer
+    memcpy(peerInfo.peer_addr, broadcastAddress, 6);
+    peerInfo.channel = 0;  
+    peerInfo.encrypt = false;
+
+    // Add peer        
+    if (esp_now_add_peer(&peerInfo) != ESP_OK){
+        Serial.println("Failed to add peer");
+        return;
+    } else 
+        Kernel::connectedDevices = 1;
+    // Register for a callback function that will be called when data is received
+    esp_now_register_recv_cb(OnDataRecv);
 }

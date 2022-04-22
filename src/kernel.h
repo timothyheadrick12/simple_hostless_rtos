@@ -16,18 +16,15 @@
 #define CONNECTED_DEVICE_O 19
 #define LED 2
 
-void IRAM_ATTR device_disconnected_isr();
-
 class Kernel {
     private:
         static boolean ledStatus;
     public:
         Scheduler scheduler;
         Kernel();
-        uint8_t getConnectedDevices() const {return connectedDevices;}
         void handleMessage();
-        static uint8_t id; //can only actually be 4 bits, not eight
         static uint8_t connectedDevices;
+        void toggleLed();
 
 
 };
