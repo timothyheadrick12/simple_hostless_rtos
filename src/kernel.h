@@ -6,15 +6,11 @@
 
 #define CREATE_CHILD_PRIME_ADDER 6
 #define NEW_DEVICE_CONNECTED 0
-#define TOGGLE_LED 1
 
-#define OFF 0
-#define ON 1
 #define DEVICE_ID 0
 
 #define CONNECTED_DEVICE_I 13
 #define CONNECTED_DEVICE_O 19
-#define LED 2
 
 class Kernel {
     private:
@@ -24,7 +20,6 @@ class Kernel {
         Kernel();
         void handleMessage();
         static uint8_t connectedDevices;
-        void toggleLed();
 
 
 };

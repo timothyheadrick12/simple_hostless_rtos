@@ -1,8 +1,8 @@
 #include "kernel.h"
 #include "message.h"
 #include "prime_adder.h"
+#include "led_toggler.h"
 
-boolean Kernel::ledStatus = OFF;
 uint8_t Kernel::connectedDevices = 0;
 
 Kernel::Kernel() {
@@ -21,7 +21,7 @@ void Kernel::handleMessage() {
                 Serial.println("Successfully recieved device connected message!");
                 break;
             case TOGGLE_LED:
-                toggleLed();
+                scheduler.push(new LedToggler());
                 break;
             case CREATE_CHILD_PRIME_ADDER:
                 scheduler.push(new PrimeAdder(message.message >> 16, message.message & 0xFF, 0, message.sendingProcess));
@@ -30,15 +30,5 @@ void Kernel::handleMessage() {
                 scheduler.find(message.targetProcess)->handleResponse(message.message);
                 break;
         }
-    }
-}
-
-void Kernel::toggleLed() {
-    if(ledStatus) {
-        digitalWrite(LED, LOW);
-        ledStatus = OFF;
-    } else {
-        digitalWrite(LED, HIGH);
-        ledStatus = ON;
     }
 }

@@ -8,6 +8,7 @@ PrimeAdder::PrimeAdder(const uint16_t & m_maxVal, const uint16_t & m_curVal, con
 }
 
 PrimeAdder::PrimeAdder(const uint16_t & m_maxVal, const uint16_t & m_curVal): Program(nextId++), parentProcessId(0), numResponses(0), sum(2) {
+    processStartTime = millis();
     maxVal = m_maxVal;
     curTestVal = 1;
     uint8_t numConnectedDevices = Kernel::connectedDevices;
@@ -15,6 +16,7 @@ PrimeAdder::PrimeAdder(const uint16_t & m_maxVal, const uint16_t & m_curVal): Pr
     Serial.println(numConnectedDevices);
     if(numConnectedDevices == 0) {
         curVal = m_curVal;
+        numChildProcesses = 0;
         Serial.println("Created primeAdder on one device");
     } else {
         Message* messageContainer;
@@ -54,8 +56,14 @@ void PrimeAdder::execute() {
         }
         else{
             complete = true;
+            unsigned long completionTime = millis();
+            Serial.println("-----------------------------");
             Serial.print("Finished prime addition: ");
             Serial.println(sum);
+            Serial.print("In ");
+            Serial.print((completionTime - processStartTime)/1000.0);
+            Serial.println(" seconds.");
+            Serial.println("-----------------------------");
             if(parentProcessId) {
                 Message(parentProcessId, id, sum).send();
             }

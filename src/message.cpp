@@ -1,7 +1,7 @@
 #include "message.h"
 #include "kernel.h"
 //-----------------------------------------------------Device 1---------------------------------Device 0
-const uint8_t Message::broadcastAddress[6] = /*{0xC8, 0xC9, 0xA3, 0xC5, 0xC8, 0x38};*/ {0xC8, 0xC9, 0xA3, 0xC5, 0xDE, 0x94};
+const uint8_t Message::broadcastAddress[6] = /*{0xC8, 0xC9, 0xA3, 0xC5, 0xC8, 0x38};*/  {0xC8, 0xC9, 0xA3, 0xC5, 0xDE, 0x94};
 esp_now_peer_info_t Message::peerInfo;
 Message Message::incomingMessage;
 bool Message::messageReceived = false;

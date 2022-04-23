@@ -8,6 +8,7 @@ class PrimeAdder: public Program {
     private:
         static uint8_t nextId;
 
+        unsigned long processStartTime;
         uint8_t parentDeviceId;
         //if parentProcessId is zero there is no parent instance
         uint8_t parentProcessId;
