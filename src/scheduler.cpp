@@ -54,18 +54,26 @@ void Scheduler::remove(Program* program) {
 Program* Scheduler::getNext(const uint8_t & level) {
     Program* found = nullptr;
     uint8_t firstReadyIndex = 0;
+    
+    //get the first ready process from the given level of the scheduler or return nullptr
     do {
         found = scheduler[level][firstReadyIndex];
         firstReadyIndex++;
     } while(firstReadyIndex < levelLen && found && !(found->isReady()));
-    //firstReadyIndex is one greater than its actual index after this point
+    
+    //--firstReadyIndex is one greater than its actual index after this point
+    
     if(firstReadyIndex == levelLen && !(found->isReady())) {
         Serial.println("ERROR: Scheduler level is filled with waiting processes");
         return nullptr;
     }
+
+    //no need to move other processes if no proces not found
     if(!found) {
         return nullptr;
     }
+
+    //if process found, need to move all processes after it forward in the queue
     for(uint8_t i = firstReadyIndex; i < levelLen; i++){
         scheduler[level][i-1] = scheduler[level][i];
     }

@@ -6,11 +6,13 @@ esp_now_peer_info_t Message::peerInfo;
 Message Message::incomingMessage;
 bool Message::messageReceived = false;
 
+//Confirms whether a message succesfullt sent or not
 void IRAM_ATTR OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
   Serial.print("\r\nLast Packet Send Status:\t");
   Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
 }
 
+//copy incoming message data into incomingMessage and sets messageRecieved to true
 void IRAM_ATTR OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   memcpy(&Message::incomingMessage, incomingData, sizeof(Message::incomingMessage));
   Serial.print("Bytes received: ");
